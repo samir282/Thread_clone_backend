@@ -2,3 +2,5 @@ fastapi
 uvicorn[standard]
 sqlalchemy
 mysqlclient
+werkzeug
+python-jose[cryptography]
