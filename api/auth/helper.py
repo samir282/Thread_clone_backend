@@ -3,9 +3,8 @@ from sqlalchemy.orm import Session
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import timedelta
 
-from .schema import login_schema
 from .model import User
-from .utils import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
+from api.auth.utils import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
 
 def create_user(name:str, user_name: str, password: str, db: Session):
     try:

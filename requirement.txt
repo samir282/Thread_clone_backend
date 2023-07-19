@@ -3,4 +3,5 @@ uvicorn[standard]
 sqlalchemy
 mysqlclient
 werkzeug
-python-jose[cryptography]
+python-jose
+python-multipart
