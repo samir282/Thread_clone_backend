@@ -11,3 +11,4 @@ class User(auth_base):
     user_name = Column(String(255), unique= True, primary_key= True)
     password = Column(Text,nullable=False)
     following = relationship('Following', back_populates= 'user')
+    post = relationship('Post', back_populates= 'user')

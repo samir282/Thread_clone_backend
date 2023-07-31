@@ -1,7 +1,6 @@
 from fastapi import status, HTTPException
 from sqlalchemy.orm import Session
 
-
 from .model import Following
 
 def follow_request(id : str, current_user , db : Session):
@@ -44,6 +43,17 @@ def get_followers_details(current_user, db: Session):
         if not followers:
             raise HTTPException(status_code= status.HTTP_400_BAD_REQUEST, detail= 'No followers found')
         return followers
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code= status.HTTP_500_INTERNAL_SERVER_ERROR, detail= f'An error occured : {e}')
+    
+def get_following_details(current_user, db: Session):
+    try:
+        followings = db.query(Following).filter(Following.user_name == current_user.username).all()
+        if not followings:
+            raise HTTPException(status_code= status.HTTP_400_BAD_REQUEST, detail= 'Not following to anyone')
+        return followings
     except HTTPException as e:
         raise e
     except Exception as e:

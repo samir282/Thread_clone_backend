@@ -5,3 +5,4 @@ mysqlclient
 werkzeug
 python-jose
 python-multipart
+uuid
