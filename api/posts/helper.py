@@ -41,10 +41,10 @@ def delete_a_post(id1 : UUID, current_user, db : Session):
     except Exception as e:
         raise HTTPException(status_code= status.HTTP_500_INTERNAL_SERVER_ERROR, detail= f'an error occured: {e}')
 
-def get_profile_timeline(current_user: str, page: int , limit: int , db: Session):
+def get_profile_timeline(user_id: str, current_user: str, page: int , limit: int , db: Session):
     try:
         offset = (page - 1) * limit
-        timeline = db.query(Post).filter(Post.user_name == current_user).order_by(Post.post_time.desc()).offset(offset).limit(limit).all()
+        timeline = db.query(Post).filter(Post.user_name == user_id).order_by(Post.post_time.desc()).offset(offset).limit(limit).all()
 
         total_post = db.query(Post).filter(Post.user_name == current_user).count()
         total_pages = math.ceil(total_post/limit)

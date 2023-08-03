@@ -9,7 +9,7 @@ router = APIRouter()
 router.include_router(
     auth_router,
     prefix= "/auth",
-    tags= ["AUth"]
+    tags= ["Auth"]
 )
 
 router.include_router(
