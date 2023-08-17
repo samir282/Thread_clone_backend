@@ -18,12 +18,23 @@ def post_blog(blog : str, db : Session, current_user):
         db.commit()
         return {
             'post_id' : post.id,
-            'message' : "posted",
+            'message' : "posted"
         }
     except HTTPException as e:
         raise e
     except Exception as e:
         raise HTTPException(status_code= status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f'an error occured{e}')
+    
+def getpost(post_id, db):
+    try:
+        post = db.query(Post).filter(post_id == Post.id).first()
+        if not post:
+            raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail="post not found")
+        return post
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f'an error occured{e}')
     
 def delete_a_post(id1 : UUID, current_user, db : Session):
     try:
@@ -43,16 +54,15 @@ def delete_a_post(id1 : UUID, current_user, db : Session):
 
 def get_profile_timeline(user_id: str, current_user: str, page: int , limit: int , db: Session):
     try:
-        offset = (page - 1) * limit
-        timeline = db.query(Post).filter(Post.user_name == user_id).order_by(Post.post_time.desc()).offset(offset).limit(limit).all()
-
         total_post = db.query(Post).filter(Post.user_name == current_user).count()
         total_pages = math.ceil(total_post/limit)
         print(total_post, total_pages)
         if page>total_pages:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail= 'No more post available')
+        offset = (page - 1) * limit
+        timeline = db.query(Post).filter(Post.user_name == user_id).order_by(Post.post_time.desc()).offset(offset).limit(limit).all()
         if not timeline:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Nothing posted yet')
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='No Post available')
         return timeline
     except HTTPException as e:
         raise e
@@ -61,19 +71,52 @@ def get_profile_timeline(user_id: str, current_user: str, page: int , limit: int
 
 def get_user_timeline(current_user: str, page  : int, limit : int, db : Session):
     try:
-        offset = (page-1) * limit
-        timeline = db.query(Post)\
-              .join(Following, Post.user_name == Following.following_id)\
-              .filter(Following.user_name == current_user).order_by(Post.post_time.desc()).offset(offset).limit(limit).all()
         total_post = db.query(Post)\
               .join(Following, Post.user_name == Following.following_id)\
               .filter(Following.user_name == current_user).count()
         total_pages = math.ceil(total_post/limit)
         print(total_post, total_pages)
-        if page>total_pages or not timeline:
+        if page>total_pages:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail= 'No post available')
+        offset = (page-1) * limit
+        timeline = db.query(Post)\
+              .join(Following, Post.user_name == Following.following_id)\
+              .filter(Following.user_name == current_user).order_by(Post.post_time.desc()).offset(offset).limit(limit).all()
+        if not timeline:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail= 'No post available')
         return timeline
     except HTTPException as e:
         raise e
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f'an error occurred: {e}')
+    
+def re_post(post_id, blog, current_user, db):
+    try:
+        post = Post(
+                    id = uuid.uuid4(),
+                    user_name = current_user,
+                    post_content = blog,
+                    post_time = datetime.datetime.now(),
+                    repost_ref_id = post_id
+                    )
+        db.add(post)
+        db.commit()
+        return {
+            'post_id' : post.id,
+            'message' : "posted"
+        }
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code= status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f'an error occured{e}')
+    
+def reposts(post_id, db):
+    try:
+        reposts = db.query(Post).filter(post_id == Post.repost_ref_id).all()
+        if not reposts:
+            raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail="No repost found")
+        return reposts
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code= status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f'an error occured{e}')
