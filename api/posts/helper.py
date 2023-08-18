@@ -5,7 +5,7 @@ import datetime
 import math
 from uuid import UUID
 
-from .model import Post
+from .model import Post, Like
 from ..following.model import Following
 
 def post_blog(blog : str, db : Session, current_user):
@@ -13,7 +13,10 @@ def post_blog(blog : str, db : Session, current_user):
         post = Post(id = uuid.uuid4(),
                     user_name = current_user.username,
                     post_content = blog,
-                    post_time = datetime.datetime.now())
+                    post_time = datetime.datetime.now(),
+                    total_like = 0
+                    )
+        
         db.add(post)
         db.commit()
         return {
@@ -120,3 +123,32 @@ def reposts(post_id, db):
         raise e
     except Exception as e:
         raise HTTPException(status_code= status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f'an error occured{e}')
+    
+def like_unlike_post(post_id: UUID, curent_user, db : Session):
+    try:
+        islike = db.query(Like).filter(curent_user == Like.liked_user_name and post_id== Like.post_id).first()
+        post = db.query(Post).filter(post_id == Post.id).first()
+        if islike:
+            post.total_like -=1
+            db.delete(islike)
+            db.commit()
+            return{
+                'message' : 'unliked',
+                'total_like' : post.total_like
+            }
+        else:
+            like = Like(
+                        post_id = post_id,
+                        liked_user_name = curent_user
+                        )
+            post.total_like +=1
+            db.add(like)
+            db.commit()
+            return {
+                'message' : "liked",
+                'total_like' : post.total_like
+            }
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code= status.HTTP_500_INTERNAL_SERVER_ERROR, detail= f'an error occured{e}')
